@@ -1,0 +1,23 @@
+<body>
+    <h1>AutoGarden</h1>
+    <h3>Modo Atual: </h3>
+    <div class="abc">
+
+        <div class="box-botao" id="s">
+            <p class="button">Trocar modo (s)</p>
+        </div>
+        <div class="box-botao" id="m">
+            <p class="button">Habilitar rega automática</p>
+        </div>
+        <div class="box-botao" id="a">
+            <p class="button">Desabilitar rega automática</p>
+        </div>
+        <div class="box-botao" id="r">
+            <p class="button"> Regar </p>
+        </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    </div>
+</body>
