@@ -5,11 +5,10 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/semphr.h>
-
 // Cria uma instância do servidor web
 AsyncWebServer server(80);
 
-const int pinoDHT11 = 32; // PINO ANALÓGICO UTILIZADO PELO DHT11
+const int pinoDHT11 = 33; // PINO ANALÓGICO UTILIZADO PELO DHT11
 const int umiditypin = 34;
 
 DHTesp dht; // Instância da classe DHTesp
@@ -24,7 +23,7 @@ const int pwmChannel = 0; // Canal PWM (pode ser 0-15)
 const int pwmFreq = 5000; // Frequência PWM em Hz
 const int pwmResolution = 8; // Resolução PWM em bits (0-255)
 bool ledState = false; // Estado do LED
-bool deviceMode = false;
+bool deviceMode = true;
 bool BombaState = false;
 int temperatura;
 String temperaturaStr;
@@ -34,7 +33,7 @@ int umidade_solo;
 String umidade_soloStr;
 int lastValidCondicoes = 1;
 int condicoes;
-int umidade_minima = 90;
+int umidade_minima = 50;
 int temperatura_maxima = 27;
 int temperatura_minima = 20;
 int temperatura_alarme = 30;
@@ -52,14 +51,14 @@ String readSerialInput(String prompt) {
 }
 
 // Substitua pelas credenciais da sua rede WiFi
-const char* ssid = "iPhone";
-const char* password = "kess@123";
+const char* ssid = "AndroidAP9F65";
+const char* password = "12345678";
 
 // Tarefa de leitura de sensores
 void sensorTask(void *pvParameters) {
     for (;;) {
         xSemaphoreTake(sensorMutex, portMAX_DELAY);
-        umidade_solo = map(analogRead(umiditypin), 4095, 2000, 0, 100);
+        umidade_solo = map(analogRead(umiditypin), 4095, 1000, 0, 100);
         TempAndHumidity data = dht.getTempAndHumidity();
 
         temperatura = data.temperature;
@@ -96,7 +95,7 @@ void controlTask(void *pvParameters) {
                 Serial.println("Condição 1: Planta fria e seca -> regar / amarelo.");
                 estadoStr = "Planta fria e seca -> regar / amarelo.";
                 BombaState = true;
-                analogWrite(pwmpin , 150);
+                analogWrite(pwmpin , 80);
                 digitalWrite(LHpin1 , LOW);
                 digitalWrite(LHpin2 , HIGH);
                 digitalWrite(ledPinBlue, LOW);
@@ -137,7 +136,7 @@ void controlTask(void *pvParameters) {
                 Serial.println("Condição 5: Planta muito fria e seca -> Regar / vermelho.");
                 estadoStr = "Planta muito fria e seca -> Regar / vermelho.";
                 BombaState = true;
-                analogWrite(pwmpin , 50);
+                analogWrite(pwmpin , 80);
                 digitalWrite(LHpin1 , LOW);
                 digitalWrite(LHpin2 , HIGH);
                 digitalWrite(ledPinBlue, LOW);
@@ -151,7 +150,6 @@ void controlTask(void *pvParameters) {
                 Serial.println("Condição de alarme: Planta muito quente -> alerta vermelho.");
                 estadoStr = "Planta muito quente -> alerta vermelho.";
                 BombaState = false;
-                analogWrite(pwmpin , 50);
                 digitalWrite(LHpin1 , LOW);
                 digitalWrite(LHpin2 , LOW);
                 digitalWrite(ledPinBlue, LOW);
@@ -193,27 +191,37 @@ void setup() {
 
     // Define as rotas do servidor
     server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-        String html = "<!DOCTYPE html><html><body>";
-        html += "<h1>Controle do ESP32</h1>";
-        html += "<h1>ESP32 Monitoramento de Planta</h1>";
-        html += "<p>Umidade do Solo: " + umidade_soloStr + "</p>";
-        html += "<p>Umidade do Ar: " + umidade_arStr + "</p>";
-        html += "<p>Temperatura: " + temperaturaStr + "</p>";
-        html += "<p>Estado: " + estadoStr + "</p>";
-        html += "<p>Automatic Mode: " + String(deviceMode ? "OFF" : "ON") + "</p>";
-        html += "<button onclick=\"toggleMode()\">Toggle Mode</button>";
+        String html = "<!DOCTYPE html><html>";
+        html += "<head>";
+        html += "    <meta charset='UTF-8' />";
+        html += "    <meta name='viewport' content='width=device-width, initial-scale=1.0' />";
+        html += "    <link rel='stylesheet' href='style.css' />";
+        html += "    <title>AutoGarden</title>";
+        html += "</head>";
+        html += "<style>";
+        html += "*{padding: 0; margin: 0; text-decoration: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;} .banner2{width: 100%; background-color:rgb(158, 238, 121); background-image: linear-gradient(rgba(0,0,0,0.75),rgba(0,0,0,0.75)),url('../images/pagina_principal.avif'); background-size: cover; background-position: center;} .banner2 h1{color: white; font-size: 50px; text-align: center;} .banner2 h2{color: white; font-size: 35px; text-align: center; margin-bottom: 15px;} .banner2 h3{color: white; font-size: 20px; text-align: center; margin-bottom: 15px;} .button2{width: 200px; padding: 15px 10px; text-align: center; display: block; margin: 20px auto; border-radius: 20px; font-weight: bold; font-size: 20px; border: 2px solid rgb(255, 255, 255); background: transparent; color: white; cursor: pointer; overflow: hidden; transition: all 0.3s ease;} .button2:hover{background: rgb(97, 165, 113); box-shadow: rgb(36, 17, 73); transform: scale(1.1);} .list-container{display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center;} .button3{width: 150px; padding: 15px 10px; text-align: center; display: block; margin: 20px auto; border-radius: 20px; font-weight: bold; font-size: 20px; border: 2px solid rgb(255, 255, 255); background: transparent; color: white; cursor: pointer; overflow: hidden; transition: all 0.3s ease; margin-bottom: 15px;} .button3:hover{background: rgb(97, 165, 113); box-shadow: rgb(36, 17, 73); transform: scale(1.1);} .formu{color: white; font-size: 20px; text-align: center; margin-bottom: 15px;} .image{width: 20%; display: block; margin-left: auto; margin-right: auto;} html, body{margin: 0; padding: 0; height: 100%; padding-bottom: px;}";
+        html += "</style>";
+        html += "<body>";
+        html += "<div class='banner2'>";
+        html += "<h1>AutoGarden</h1>";
+        html += "<h3>Umidade do Solo: " + umidade_soloStr + "</h3>";
+        html += "<h3>Umidade do Ar: " + umidade_arStr + "</h3>";
+        html += "<h3>Temperatura: " + temperaturaStr + "</h3>";
+        html += "<h3>Estado: " + estadoStr + "</h3>";
+        html += "<h3>Automatic Mode: " + String(deviceMode ? "OFF" : "ON") + "</h3>";
+        html += "<button class='button2' onclick=\"toggleMode()\">Trocar Modo</button>";
         if (deviceMode) {
-            html += "<p>Bomba: " + String(BombaState ? "ON" : "OFF") + "</p>";
-            html += "<button onclick=\"toggleBOMBA()\">Toggle BOMBA</button>";
+            html += "<h3>Bomba: " + String(BombaState ? "ON" : "OFF") + "</h3>";
+            html += "<button class='button2' onclick=\"toggleBOMBA()\">Ativar/Desativar Bomba</button>";
         }
         else {
             html += "<h2>Configuracoes Personalizadas</h2>";
-            html += "<form action=\"/setParams\" method=\"POST\">";
+            html += "<form class='formu' action=\"/setParams\" method=\"POST\">";
             html += "Umidade Minima: <input type=\"number\" name=\"umidade_minima\" value=\"" + String(umidade_minima) + "\"><br>";
             html += "Temperatura Minima: <input type=\"number\" name=\"temperatura_minima\" value=\"" + String(temperatura_minima) + "\"><br>";
             html += "Temperatura Maxima: <input type=\"number\" name=\"temperatura_maxima\" value=\"" + String(temperatura_maxima) + "\"><br>";
             html += "Temperatura de Alarme: <input type=\"number\" name=\"temperatura_alarme\" value=\"" + String(temperatura_alarme) + "\"><br>";
-            html += "<input type=\"submit\" value=\"Enviar\">";
+            html += "<input class='button3' type=\"submit\" value=\"Enviar\">";
             html += "</form>";
         }
         html += "<script>";
@@ -255,7 +263,7 @@ void setup() {
     server.on("/toggleBOMBA", HTTP_GET, [](AsyncWebServerRequest *request) {
         BombaState = !BombaState;
         digitalWrite(ledPinBlue, BombaState ? HIGH : LOW);
-        analogWrite(pwmpin, 150);
+        analogWrite(pwmpin, 80);
         digitalWrite(LHpin2, BombaState ? HIGH : LOW);
         request->send(200, "text/plain", BombaState ? "Bomba ligada" : "Bomba desligada");
     });
