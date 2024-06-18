@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='UTF-8' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0' />
+    <link rel='stylesheet' href='style.css' />
+    <title>AutoGarden</title>
+</head>
+<body>
+    <div class='banner2'>
+        <h1>AutoGarden</h1>
+        <h3>Umidade do Solo: <!-- umidade_soloStr --></h3>
+        <h3>Umidade do Ar: <!-- umidade_arStr --></h3>
+        <h3>Temperatura: <!-- temperaturaStr --></h3>
+        <h3>Estado: <!-- estadoStr --></h3>
+        <h3>Automatic Mode: <!-- String(deviceMode ? "OFF" : "ON") --></h3>
+        <button class='button2' onclick="toggleMode()">Trocar Modo</button>
+        <!-- if (deviceMode) -->
+        <h3>Bomba: <!-- String(BombaState ? "ON" : "OFF") --></h3>
+        <button class='button2' onclick="toggleBOMBA()">Ativar/Desativar Bomba</button>
+        <!-- else -->
+        <h2>Configuracoes Personalizadas</h2>
+        <form class='formu' action="/setParams" method="POST">
+            Umidade Minima: <input type="number" name="umidade_minima" value="<!-- String(umidade_minima) -->"><br>
+            Temperatura Minima: <input type="number" name="temperatura_minima" value="<!-- String(temperatura_minima) -->"><br>
+            Temperatura Maxima: <input type="number" name="temperatura_maxima" value="<!-- String(temperatura_maxima) -->"><br>
+            Temperatura de Alarme: <input type="number" name="temperatura_alarme" value="<!-- String(temperatura_alarme) -->"><br>
+            <input class='button3' type="submit" value="Enviar">
+        </form>
+        <!-- endif -->
+    </div>
+    <script>
+        function toggleMode() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/toggleMode', true);
+            xhr.send();
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    alert(xhr.responseText);
+                    location.reload(); // Recarrega a página para atualizar o estado do dispositivo
+                }
+            }
+        }
+        function toggleBOMBA() {
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', '/toggleBOMBA', true);
+            xhr.send();
+            xhr.onload = function() {
+                if (xhr.status == 200) {
+                    alert(xhr.responseText);
+                    location.reload(); // Recarrega a página para atualizar o estado da bomba
+                }
+            }
+        }
+    </script>
+</body>
+</html>
